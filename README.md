@@ -31,6 +31,14 @@ MODEL_NAME=gpt-4o
 HF_TOKEN=hf_your_token_here
 ```
 
+### Step 1.5 — Install Host Requirements
+
+Whether you run the server via Docker or locally, you must install the Python requirements on your host machine to run the evaluator and validation scripts:
+
+```bash
+pip install -r requirements.txt
+```
+
 > **That's the only file you need to edit.** Both `inference.py` and Docker read from it automatically.
 
 ---
@@ -49,7 +57,6 @@ You should see the CloudFinOps banner and `Ready to accept connections ✓` in t
 #### Option B: Python (No Docker)
 
 ```bash
-pip install -r requirements.txt
 uvicorn env.server:app --host 0.0.0.0 --port 8000
 ```
 
