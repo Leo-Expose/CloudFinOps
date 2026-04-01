@@ -40,9 +40,9 @@ HF_TOKEN=hf_...
 
 ### Step 2 — Start the Environment Server
 
-#### Option A: Docker (Self-Contained)
+#### Option A: Docker (Self-Contained & Recommended)
 
-The Docker container includes its own Python environment and dependencies. **No host setup required.**
+The Docker container includes its own Python environment and dependencies. **No host setup or pip install required.**
 
 ```bash
 docker build -t cloudfinops-env .
@@ -64,8 +64,13 @@ uvicorn env.server:app --host 0.0.0.0 --port 8000
 
 Open a **new terminal** (keep the server running). 
 
-If you haven't installed dependencies on your host machine yet (e.g., if you used Option A for the server), you must do so once to run the client scripts:
+**If you used Option A (Docker):**
+Run the evaluator as a standalone container pointing to your host server. No pip dependencies needed!
+```bash
+docker run --env-file .env -e ENV_BASE_URL=http://host.docker.internal:8000 cloudfinops-env python inference.py
+```
 
+**If you used Option B (Local Python):**
 ```bash
 pip install -r requirements.txt
 python inference.py
@@ -93,10 +98,16 @@ The script will:
 
 ### Step 4 (Optional) — Run Validation
 
-From the **parent directory** of `cloudfinops-env/`:
+Run the internal validation suite to verify the environment meets hackathon requirements.
 
+**If you used Option A (Docker):**
 ```bash
-python pre_validation.py --repo-dir ./cloudfinops-env --skip-docker
+docker run --env-file .env cloudfinops-env python pre_validation.py --skip-docker
+```
+
+**If you used Option B (Local Python):**
+```bash
+python pre_validation.py --skip-docker
 ```
 
 If everything passes, you'll see: **🎉 All checks passed!.**
@@ -123,8 +134,13 @@ OpenEnv environments have a strict contract: typed models, REST endpoints, deter
 
 ### How to run
 
+**Via Docker (Recommended):**
 ```bash
-# From inside the project directory:
+docker run --env-file .env cloudfinops-env python pre_validation.py --skip-docker
+```
+
+**Locally:**
+```bash
 python pre_validation.py                   # full check (includes Docker build)
 python pre_validation.py --skip-docker     # skip Docker build (faster)
 ```
