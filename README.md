@@ -21,42 +21,40 @@ cp .env.example .env
 Open `.env` and set your values:
 
 ```env
-# The API endpoint for the LLM (OpenAI-compatible)
-API_BASE_URL=https://api.openai.com/v1
+# 1. Choose your provider: "groq" or "huggingface"
+LLM_PROVIDER=groq
 
-# The model identifier to use for inference
-MODEL_NAME=gpt-4o
+# 2. If using Groq:
+GROQ_API_KEY=gsk_...
+GROQ_MODEL_NAME=llama-3.3-70b-versatile
 
-# Your Hugging Face / API key
-HF_TOKEN=hf_your_token_here
+# 3. If using Hugging Face (Router):
+API_BASE_URL=https://router.huggingface.co/v1
+MODEL_NAME=openai/gpt-oss-20b
+HF_TOKEN=hf_...
 ```
 
-### Step 1.5 — Install Host Requirements
-
-Whether you run the server via Docker or locally, you must install the Python requirements on your host machine to run the evaluator and validation scripts:
-
-```bash
-pip install -r requirements.txt
-```
-
-> **That's the only file you need to edit.** Both `inference.py` and Docker read from it automatically.
+> **Note:** Both `inference.py` and the Docker container read from this file automatically.
 
 ---
 
 ### Step 2 — Start the Environment Server
 
-#### Option A: Docker (Recommended)
+#### Option A: Docker (Self-Contained)
+
+The Docker container includes its own Python environment and dependencies. **No host setup required.**
 
 ```bash
 docker build -t cloudfinops-env .
 docker run --env-file .env -p 8000:8000 cloudfinops-env
 ```
 
-You should see the CloudFinOps banner and `Ready to accept connections ✓` in the terminal.
+#### Option B: Local Python (Manual Setup)
 
-#### Option B: Python (No Docker)
+Use this if you prefer running without Docker. Requires Python 3.9+.
 
 ```bash
+pip install -r requirements.txt
 uvicorn env.server:app --host 0.0.0.0 --port 8000
 ```
 
@@ -64,9 +62,12 @@ uvicorn env.server:app --host 0.0.0.0 --port 8000
 
 ### Step 3 — Run the Baseline Evaluator
 
-Open a **new terminal** (keep the server running) and run:
+Open a **new terminal** (keep the server running). 
+
+If you haven't installed dependencies on your host machine yet (e.g., if you used Option A for the server), you must do so once to run the client scripts:
 
 ```bash
+pip install -r requirements.txt
 python inference.py
 ```
 

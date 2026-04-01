@@ -93,11 +93,19 @@ def _section(title: str) -> None:
 # ---------------------------------------------------------------------------
 def check_env_vars(vr: ValidationResult) -> None:
     _section("Check 1 — Environment Variables")
-    for var in ("API_BASE_URL", "MODEL_NAME", "HF_TOKEN"):
+    provider = os.getenv("LLM_PROVIDER", "huggingface").lower()
+    vr.record("LLM_PROVIDER is set", True, provider)
+
+    if provider == "groq":
+        checks = ("GROQ_API_KEY", "GROQ_MODEL_NAME")
+    else:
+        checks = ("API_BASE_URL", "MODEL_NAME", "HF_TOKEN")
+
+    for var in checks:
         val = os.getenv(var)
         if val:
             # Mask sensitive values
-            if var == "HF_TOKEN":
+            if "KEY" in var or "TOKEN" in var:
                 display = val[:4] + "****" + val[-4:] if len(val) > 8 else "****"
             else:
                 display = val

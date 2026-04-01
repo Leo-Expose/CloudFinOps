@@ -32,9 +32,16 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 # ---------------------------------------------------------------------------
 # MANDATORY Environment Variables (per hackathon rules)
 # ---------------------------------------------------------------------------
-API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://api.groq.com/openai/v1")
-MODEL_NAME: str = os.environ.get("MODEL_NAME", "llama-3.3-70b-versatile")
-HF_TOKEN: str = os.environ.get("HF_TOKEN", "")
+LLM_PROVIDER: str = os.environ.get("LLM_PROVIDER", "huggingface").lower()
+
+if LLM_PROVIDER == "groq":
+    API_BASE_URL: str = "https://api.groq.com/openai/v1"
+    MODEL_NAME: str = os.environ.get("GROQ_MODEL_NAME", "llama-3.3-70b-versatile")
+    API_KEY: str = os.environ.get("GROQ_API_KEY", "")
+else:
+    API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+    MODEL_NAME: str = os.environ.get("MODEL_NAME", "openai/gpt-oss-20b")
+    API_KEY: str = os.environ.get("HF_TOKEN", "")
 
 # CloudFinOps environment URL (local Docker or HF Space)
 ENV_BASE_URL: str = os.environ.get("ENV_BASE_URL", "http://localhost:8000")
@@ -51,18 +58,22 @@ def _validate_env() -> None:
     if not API_BASE_URL:
         missing.append("API_BASE_URL")
     if not MODEL_NAME:
-        missing.append("MODEL_NAME")
-    if not HF_TOKEN:
-        missing.append("HF_TOKEN")
+        missing.append("MODEL_NAME (or GROQ_MODEL_NAME)")
+    if not API_KEY:
+        missing.append("API_KEY (HF_TOKEN or GROQ_API_KEY)")
 
     if missing:
         print("\n  ❌ ERROR: Missing mandatory environment variables:")
         for var in missing:
             print(f"     • {var}")
         print("\n  Please set them in your .env file or via export.")
-        print('     export API_BASE_URL="https://api.groq.com/openai/v1"')
-        print('     export MODEL_NAME="llama-3.3-70b-versatile"')
-        print('     export HF_TOKEN="gsk_your_key_here"')
+        if LLM_PROVIDER == "groq":
+            print('     export GROQ_MODEL_NAME="llama-3.3-70b-versatile"')
+            print('     export GROQ_API_KEY="gsk_your_key_here"')
+        else:
+            print('     export API_BASE_URL="https://router.huggingface.co/v1"')
+            print('     export MODEL_NAME="openai/gpt-oss-20b"')
+            print('     export HF_TOKEN="hf_your_key_here"')
         sys.exit(1)
 
 
@@ -74,7 +85,7 @@ _validate_env()
 
 client = OpenAI(
     base_url=API_BASE_URL,
-    api_key=HF_TOKEN,
+    api_key=API_KEY,
 )
 
 # HTTP client for environment REST calls
@@ -225,7 +236,7 @@ def run_task(task_id: str) -> float:
 def main() -> None:
     start_time = time.time()
 
-    masked_key = ('*' * 4 + HF_TOKEN[-4:]) if len(HF_TOKEN) > 4 else '****'
+    masked_key = ('*' * 4 + API_KEY[-4:]) if len(API_KEY) > 4 else '****'
 
     print("=" * 60)
     print("  ☁️  CloudFinOps-Env Baseline Evaluator")
